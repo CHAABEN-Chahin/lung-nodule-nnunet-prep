@@ -1,5 +1,6 @@
 # LIDC-IDRI to nnU-Net v2: End-to-End Project README
-NOTE : This is an early version of the project, we haven't updated the code yet.
+NOTE : This is an early version of the project.The code has not yet been fully updated, so you may encounter some issues, including label misalignment and other bugs. We appreciate your understanding.
+
 This repository documents the full path from raw LIDC-IDRI data to a training-ready nnU-Net v2 segmentation dataset.
 
 The original workflow started from a local LIDC-IDRI DICOM folder. That source folder is now moved away from this workspace for storage reasons, while derived artifacts and training-ready data remain here.
