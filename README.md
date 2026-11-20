@@ -28,7 +28,7 @@ frontend/                          React + Vite + Tailwind interface
 model/                             where the nnU-Net weights go (not in git, see model/README.md)
 malignancy_scoring_wip/            benign/malignant scoring: code written, not trained yet
 docs/                              pipeline diagram
-*.py, *.csv, *_GUIDE.md at root    data preparation: LIDC-IDRI to nnU-Net dataset (described below)
+data_preparation/                  LIDC-IDRI to nnU-Net dataset: scripts, exploration CSVs, guides (described below)
 ```
 
 ## Models
@@ -76,7 +76,7 @@ Full setup notes, including the PyRadiomics install: [frontend/README.md](fronte
 
 # Part 1: Data preparation (LIDC-IDRI to nnU-Net)
 
-This part documents the full path from raw LIDC-IDRI data to a training-ready nnU-Net segmentation dataset. The scripts sit at the repository root.
+This part documents the full path from raw LIDC-IDRI data to a training-ready nnU-Net segmentation dataset. The scripts, exploration CSVs and guides are in [data_preparation/](data_preparation/).
 
 The original workflow started from a local LIDC-IDRI DICOM folder. That source folder is now moved away from this workspace for storage reasons, while derived artifacts and training-ready data remain here.
 
@@ -96,7 +96,7 @@ Data present now:
 - Derived CT volumes and copied XML: [outputs_native_full/](outputs_native_full/)
 - nnU-Net raw datasets: [nnUNet_raw/](nnUNet_raw/)
 - Main training dataset: [nnUNet_raw/Dataset104_LungNodule_Native/](nnUNet_raw/Dataset104_LungNodule_Native/)
-- Analysis CSV outputs: [xml_metadata.csv](xml_metadata.csv), [ct_per_patient.csv](ct_per_patient.csv), [ct_slices_per_series.csv](ct_slices_per_series.csv), [ct_slices_per_patient_summary.csv](ct_slices_per_patient_summary.csv), [suspicious_missing_native_min50.csv](suspicious_missing_native_min50.csv)
+- Analysis CSV outputs: [xml_metadata.csv](data_preparation/xml_metadata.csv), [ct_per_patient.csv](data_preparation/ct_per_patient.csv), [ct_slices_per_series.csv](data_preparation/ct_slices_per_series.csv), [ct_slices_per_patient_summary.csv](data_preparation/ct_slices_per_patient_summary.csv), [suspicious_missing_native_min50.csv](data_preparation/suspicious_missing_native_min50.csv)
 
 Raw source note:
 
@@ -109,9 +109,9 @@ Raw source note:
 
 Goal: understand what annotation content exists and separate CT-ready content from CXR content.
 
-- [xml_viewer.py](xml_viewer.py): fast XML inspection and schema summary.
-- [xml_to_csv.py](xml_to_csv.py): exports structured XML metadata into [xml_metadata.csv](xml_metadata.csv).
-- [ct_count_per_patient.py](ct_count_per_patient.py): computes CT XML count per patient into [ct_per_patient.csv](ct_per_patient.csv).
+- [xml_viewer.py](data_preparation/xml_viewer.py): fast XML inspection and schema summary.
+- [xml_to_csv.py](data_preparation/xml_to_csv.py): exports structured XML metadata into [xml_metadata.csv](data_preparation/xml_metadata.csv).
+- [ct_count_per_patient.py](data_preparation/ct_count_per_patient.py): computes CT XML count per patient into [ct_per_patient.csv](data_preparation/ct_per_patient.csv).
 
 Key point: LIDC includes both CT XML (LidcReadMessage) and CXR XML (IdriReadMessage). CT segmentation preparation uses CT-linked content.
 
@@ -119,8 +119,8 @@ Key point: LIDC includes both CT XML (LidcReadMessage) and CXR XML (IdriReadMess
 
 Goal: quantify which series are likely reconstructable CT volumes.
 
-- [ct_slices_per_series.py](ct_slices_per_series.py): counts DICOM slices per series and writes [ct_slices_per_series.csv](ct_slices_per_series.csv) and [ct_slices_per_patient_summary.csv](ct_slices_per_patient_summary.csv).
-- [find_suspicious.py](find_suspicious.py): flags expected CT series with at least 50 slices that are missing reconstructed outputs into [suspicious_missing_native_min50.csv](suspicious_missing_native_min50.csv).
+- [ct_slices_per_series.py](data_preparation/ct_slices_per_series.py): counts DICOM slices per series and writes [ct_slices_per_series.csv](data_preparation/ct_slices_per_series.csv) and [ct_slices_per_patient_summary.csv](data_preparation/ct_slices_per_patient_summary.csv).
+- [find_suspicious.py](data_preparation/find_suspicious.py): flags expected CT series with at least 50 slices that are missing reconstructed outputs into [suspicious_missing_native_min50.csv](data_preparation/suspicious_missing_native_min50.csv).
 
 Why this mattered: it gave a measurable check before and after reconstruction, and helped focus fixes on missing high-value series.
 
@@ -128,13 +128,13 @@ Why this mattered: it gave a measurable check before and after reconstruction, a
 
 Goal: convert CT DICOM series to NIfTI while preserving scanner geometry.
 
-- [reconstruct_3d_volume.py](reconstruct_3d_volume.py)
+- [reconstruct_3d_volume.py](data_preparation/reconstruct_3d_volume.py)
   - validates CT XML schema in series folder
   - reads DICOM series with SimpleITK
   - keeps native geometry (no forced resampling)
   - clips HU intensities (default -1000 to 400)
   - writes native int16 volume
-- [batch.py](batch.py)
+- [batch.py](data_preparation/batch.py)
   - crawls patient/study/series folders
   - calls native reconstruction for each eligible series
   - copies XML files to output series folders
@@ -146,7 +146,7 @@ Why native geometry is important: it reduces avoidable geometric distortion befo
 
 Goal: generate nnU-Net compatible imagesTr and labelsTr for segmentation training.
 
-- [prepare_nnunet_lidc.py](prepare_nnunet_lidc.py)
+- [prepare_nnunet_lidc.py](data_preparation/prepare_nnunet_lidc.py)
   - discovers series folders containing NIfTI + XML
   - extracts SeriesInstanceUid from XML
   - matches scans via pylidc database
@@ -155,7 +155,7 @@ Goal: generate nnU-Net compatible imagesTr and labelsTr for segmentation trainin
   - writes nnU-Net structure and metadata
   - writes audit reports for full traceability
 
-Reference guide: [NNUNET_V2_PREP_GUIDE.md](NNUNET_V2_PREP_GUIDE.md)
+Reference guide: [NNUNET_V2_PREP_GUIDE.md](data_preparation/NNUNET_V2_PREP_GUIDE.md)
 
 ## 4. Dataset104 (Current Main Training Dataset)
 
@@ -209,36 +209,36 @@ Practical implication: this mix is suitable for training a first strong baseline
 
 ## 6. Script Catalog (Quick Reference)
 
-- [xml_viewer.py](xml_viewer.py): inspect and summarize XML files.
-- [xml_to_csv.py](xml_to_csv.py): export XML metadata into tabular CSV.
-- [ct_count_per_patient.py](ct_count_per_patient.py): CT XML counts per patient.
-- [ct_slices_per_series.py](ct_slices_per_series.py): DICOM slice counts per series and patient.
-- [find_suspicious.py](find_suspicious.py): locate expected missing reconstructed series.
-- [reconstruct_3d_volume.py](reconstruct_3d_volume.py): single-series native CT reconstruction.
-- [batch.py](batch.py): bulk reconstruction plus XML copy into structured output tree.
-- [prepare_nnunet_lidc.py](prepare_nnunet_lidc.py): prepare final nnU-Net dataset and reports.
-- [display.py](display.py): quick DICOM slice visualization sanity check.
+- [xml_viewer.py](data_preparation/xml_viewer.py): inspect and summarize XML files.
+- [xml_to_csv.py](data_preparation/xml_to_csv.py): export XML metadata into tabular CSV.
+- [ct_count_per_patient.py](data_preparation/ct_count_per_patient.py): CT XML counts per patient.
+- [ct_slices_per_series.py](data_preparation/ct_slices_per_series.py): DICOM slice counts per series and patient.
+- [find_suspicious.py](data_preparation/find_suspicious.py): locate expected missing reconstructed series.
+- [reconstruct_3d_volume.py](data_preparation/reconstruct_3d_volume.py): single-series native CT reconstruction.
+- [batch.py](data_preparation/batch.py): bulk reconstruction plus XML copy into structured output tree.
+- [prepare_nnunet_lidc.py](data_preparation/prepare_nnunet_lidc.py): prepare final nnU-Net dataset and reports.
+- [display.py](data_preparation/display.py): quick DICOM slice visualization sanity check.
 
 ## 7. Reproducible Run Order (From Raw Source to Dataset)
 
 If you reconnect the raw LIDC-IDRI source path:
 
 1. XML exploration and exports
-   - run [xml_viewer.py](xml_viewer.py)
-   - run [xml_to_csv.py](xml_to_csv.py)
-   - run [ct_count_per_patient.py](ct_count_per_patient.py)
+   - run [xml_viewer.py](data_preparation/xml_viewer.py)
+   - run [xml_to_csv.py](data_preparation/xml_to_csv.py)
+   - run [ct_count_per_patient.py](data_preparation/ct_count_per_patient.py)
 2. Slice audits
-   - run [ct_slices_per_series.py](ct_slices_per_series.py)
+   - run [ct_slices_per_series.py](data_preparation/ct_slices_per_series.py)
 3. Native reconstruction
-   - run [batch.py](batch.py) to generate [outputs_native_full/](outputs_native_full/)
+   - run [batch.py](data_preparation/batch.py) to generate [outputs_native_full/](outputs_native_full/)
 4. Missing-series audit
-   - run [find_suspicious.py](find_suspicious.py)
+   - run [find_suspicious.py](data_preparation/find_suspicious.py)
 5. nnU-Net prep
-   - run [prepare_nnunet_lidc.py](prepare_nnunet_lidc.py) into [nnUNet_raw/](nnUNet_raw/)
+   - run [prepare_nnunet_lidc.py](data_preparation/prepare_nnunet_lidc.py) into [nnUNet_raw/](nnUNet_raw/)
 
 ## 8. Environment and Dependencies
 
-Dependencies are listed in [requirements.txt](requirements.txt), including:
+Dependencies are listed in [requirements.txt](data_preparation/requirements.txt), including:
 
 - SimpleITK
 - pydicom
@@ -253,9 +253,9 @@ Use your existing workspace virtual environment before running scripts.
 
 ## 9. Existing Guides in This Repository
 
-- [DATA_GUIDE.md](DATA_GUIDE.md): data organization and XML schema context.
-- [ANNOTATIONS_BEGINNER_GUIDE.md](ANNOTATIONS_BEGINNER_GUIDE.md): annotation concepts and terminology.
-- [NNUNET_V2_PREP_GUIDE.md](NNUNET_V2_PREP_GUIDE.md): nnU-Net prep script usage and cautions.
+- [DATA_GUIDE.md](data_preparation/DATA_GUIDE.md): data organization and XML schema context.
+- [ANNOTATIONS_BEGINNER_GUIDE.md](data_preparation/ANNOTATIONS_BEGINNER_GUIDE.md): annotation concepts and terminology.
+- [NNUNET_V2_PREP_GUIDE.md](data_preparation/NNUNET_V2_PREP_GUIDE.md): nnU-Net prep script usage and cautions.
 
 ## 10. What Came Next
 
