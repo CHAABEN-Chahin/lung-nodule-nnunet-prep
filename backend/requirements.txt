@@ -1,0 +1,20 @@
+# Step 1: core deps (install these first)
+numpy
+SimpleITK==2.5.4
+scipy
+pandas
+nibabel
+
+# Step 2: ML
+torch
+nnunet==1.7.1
+TotalSegmentator
+
+# Step 3: web + report
+flask
+flask-cors
+reportlab
+werkzeug
+
+# Step 4: radiomics (needs numpy already installed, install separately)
+# pip install pyradiomics

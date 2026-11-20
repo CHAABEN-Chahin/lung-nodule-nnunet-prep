@@ -1,0 +1,25 @@
+# Bloc 3 — Malignancy Scoring Module
+# Install with: pip install -r requirements.txt
+
+# ── Deep Learning ──────────────────────────────────────────────────────────────
+torch>=2.0.0
+torchvision>=0.15.0
+
+# ── Medical Imaging ────────────────────────────────────────────────────────────
+pylidc>=0.2.3              # LIDC-IDRI dataset access and annotation parsing
+pyradiomics>=3.0.1         # Radiomic feature extraction (93 features)
+SimpleITK>=2.2.0           # Medical image I/O and resampling
+nibabel>=4.0.0             # NIfTI file support
+
+# ── Scientific Computing ───────────────────────────────────────────────────────
+numpy>=1.24.0
+scipy>=1.10.0              # 3D rotations, translations for augmentation
+scikit-learn>=1.2.0        # Stratified train/val/test split
+
+# ── Metrics & Evaluation ───────────────────────────────────────────────────────
+scikit-learn>=1.2.0        # AUC-ROC, F1-score
+
+# ── Utilities ──────────────────────────────────────────────────────────────────
+tqdm>=4.65.0               # Progress bars during preprocessing and training
+matplotlib>=3.7.0          # Training curve plots
+pandas>=2.0.0              # Experiment result logging

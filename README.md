@@ -1,7 +1,82 @@
-# LIDC-IDRI to nnU-Net v2: End-to-End Project README
-NOTE : This is an early version of the project.The code has not yet been fully updated, so you may encounter some issues, including label misalignment and other bugs. We appreciate your understanding.
+# Lung Nodule Detection on Chest CT: Nodulis
 
-This repository documents the full path from raw LIDC-IDRI data to a training-ready nnU-Net v2 segmentation dataset.
+P2M project by Chehine Chaaben and Yesmine Haddar (SUP'COM).
+
+An end-to-end pipeline that takes a chest CT as DICOM slices and produces segmented lung nodules, per-nodule measurements and a PDF report, served through a web platform with 2D and 3D visualization.
+
+![Pipeline](docs/pipeline_nodules_pulmonaires.svg)
+
+## Pipeline
+
+| Step | What it does | Code |
+|---|---|---|
+| 1. Reconstruction | DICOM slices to a 3D NIfTI volume (SimpleITK, native spacing) | `construct_3d.py` |
+| 2. Lung and lobe masks | TotalSegmentator, 5 lobes; restricts the search to the lungs | `lung_mask_from_volume.py` |
+| 3. Nodule segmentation | nnU-Net v1 `3d_fullres` on overlapping 80×192×192 tiles inside the lungs, probability threshold 0.15 | `predict.py` |
+| 4. False-positive reduction | Removes candidates under 3 mm, then a 3D CNN classifies a 32×48×48 crop around each candidate (keep if P(nodule) ≥ 0.2) | `nodule_filter_classifier/` |
+| 5. Features | Geometry, HU statistics and PyRadiomics descriptors per nodule, lobe of each nodule | `nodules_and_features_extraction/` |
+| 6. Platform and report | Flask API that runs steps 1 to 5 per case, React viewer (Niivue), ReportLab PDF report | `backend/`, `frontend/` |
+
+## Repository layout
+
+```
+predict.py, construct_3d.py, lung_mask_from_volume.py   standalone inference (steps 1-3)
+nodule_filter_classifier/          false-positive classifier (step 4)
+nodules_and_features_extraction/   feature extraction (step 5), with an example output in nodule_results/
+backend/                           Flask API; backend/pipeline/ holds the copies of each step the app runs
+frontend/                          React + Vite + Tailwind interface
+model/                             where the nnU-Net weights go (not in git, see model/README.md)
+malignancy_scoring_wip/            benign/malignant scoring: code written, not trained yet
+docs/                              pipeline diagram
+*.py, *.csv, *_GUIDE.md at root    data preparation: LIDC-IDRI to nnU-Net dataset (described below)
+```
+
+## Models
+
+- **Nodule segmentation:** nnU-Net v1 (1.7.1), `3d_fullres`, `nnUNetTrainerV2`, trained on LIDC-IDRI prepared with the scripts below (50% reader consensus masks). Patch 96×160×160 at 1.25 × 0.70 × 0.70 mm, a single fold. The weights are not in the repository.
+- **False-positive classifier:** a 3D CNN (4 convolutional blocks, 8 to 64 channels, about 222k parameters) that classifies a 32×48×48 crop around each candidate as nodule or non-nodule. The weights are not in the repository. See [nodule_filter_classifier/README.md](nodule_filter_classifier/README.md).
+- **Lungs and lobes:** [TotalSegmentator](https://github.com/wasserth/TotalSegmentator), pretrained.
+
+## Running
+
+Put the weights in place first (see [model/README.md](model/README.md)).
+
+Standalone inference on one DICOM folder:
+
+```bash
+pip install -r requirements-inference.txt
+python predict.py --dicom_dir path/to/dicom_folder --case_id case_001
+```
+
+Web platform (backend on port 5000, frontend on port 5173, default login `admin` / `admin`):
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+Full setup notes, including the PyRadiomics install: [frontend/README.md](frontend/README.md).
+
+## Status
+
+- Done: data preparation, nnU-Net training, inference, false-positive filtering, feature extraction, web platform and PDF report.
+- Not finished: malignancy scoring (`malignancy_scoring_wip/`), waiting for training.
+- This is a research prototype, not a medical device.
+
+---
+
+# Part 1: Data preparation (LIDC-IDRI to nnU-Net)
+
+This part documents the full path from raw LIDC-IDRI data to a training-ready nnU-Net segmentation dataset. The scripts sit at the repository root.
 
 The original workflow started from a local LIDC-IDRI DICOM folder. That source folder is now moved away from this workspace for storage reasons, while derived artifacts and training-ready data remain here.
 
@@ -182,8 +257,6 @@ Use your existing workspace virtual environment before running scripts.
 - [ANNOTATIONS_BEGINNER_GUIDE.md](ANNOTATIONS_BEGINNER_GUIDE.md): annotation concepts and terminology.
 - [NNUNET_V2_PREP_GUIDE.md](NNUNET_V2_PREP_GUIDE.md): nnU-Net prep script usage and cautions.
 
-## 10. Next Recommended Step for Training
+## 10. What Came Next
 
-Train nnU-Net v2 on Dataset104 as baseline, then evaluate recall and false positives before deciding whether to exclude any empty-label cases.
-
-This strategy preserves the full supervision signal already prepared in this project.
+The prepared dataset was used to train the nnU-Net nodule segmentation model used by the full pipeline described at the top of this README.

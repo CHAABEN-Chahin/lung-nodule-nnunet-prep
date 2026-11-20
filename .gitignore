@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node / Vite
+node_modules/
+dist/
+
+# Model weights (too large for git, see model/README.md)
+model/**
+!model/README.md
+*.state
+*.model
+*.pth
+
+# Data and generated outputs
+*.npy
+outputs_native_full/
+nnUNet_raw/
+nodulis_data/
+inference/results/

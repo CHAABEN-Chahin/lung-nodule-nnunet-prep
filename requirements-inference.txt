@@ -1,0 +1,9 @@
+# Inference pipeline dependencies
+# Create venv: python -m venv venv
+# Activate:     venv\Scripts\activate  (Windows)
+# Install:      pip install -r requirements.txt
+SimpleITK==2.5.4
+numpy==2.4.4
+torch==2.11.0
+nnunet==1.7.1
+TotalSegmentator==2.13.0

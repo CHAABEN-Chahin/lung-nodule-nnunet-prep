@@ -1,0 +1,21 @@
+{
+  "nodule_id": "nodule_002",
+  "centroid_z_vox": 83.49170616113744,
+  "centroid_y_vox": 219.3175355450237,
+  "centroid_x_vox": 221.71682464454977,
+  "voxel_count": 844,
+  "volume_mm3": 1419.844,
+  "diameter_mm": 15.0,
+  "z_extent_mm": 15.0,
+  "y_extent_mm": 13.945,
+  "x_extent_mm": 14.766,
+  "equiv_radius_mm": 6.972,
+  "sphericity": 1.0,
+  "hu_mean": -307.7,
+  "hu_std": 284.84,
+  "hu_min": -881.0,
+  "hu_max": 47.0,
+  "hu_median": -228.5,
+  "hu_p25": -577.0,
+  "hu_p75": -23.75
+}
